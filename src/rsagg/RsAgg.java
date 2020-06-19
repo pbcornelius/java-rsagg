@@ -133,6 +133,10 @@ public class RsAgg {
 							i,
 							meta.getColumnLabel(i));
 					break;
+				default:
+					throw new RuntimeException(String.format("column=%d unsupported data type %s",
+							i,
+							meta.getColumnType(i)));
 			}
 		}
 	}
