@@ -16,6 +16,9 @@ public class Col<T> {
 	
 	public final String typeName, name;
 	
+	// if true, use get[DataType]Obj() instead of get[DataType]()
+	public boolean nullable = false;
+	
 	private List<T> dataAgg = new ArrayList<>();
 	
 	private String[] dataStr;
@@ -24,17 +27,29 @@ public class Col<T> {
 	
 	private byte[] dataByte;
 	
+	private Byte[] dataByteObj;
+	
 	private short[] dataShort;
+	
+	private Short[] dataShortObj;
 	
 	private int[] dataInt;
 	
+	private Integer[] dataIntObj;
+	
 	private long[] dataLong;
 	
+	private Long[] dataLongObj;
+	
 	private float[] dataFloat;
+	
+	private Float[] dataFloatObj;
 	
 	private double[] dataDouble;
 	
 	private boolean[] dataBoolean;
+	
+	private Boolean[] dataBooleanObj;
 	
 	private LocalTime[] dataTime;
 	
@@ -62,20 +77,40 @@ public class Col<T> {
 		return dataByte;
 	}
 	
+	public Byte[] getByteObj() {
+		return dataByteObj;
+	}
+	
 	public short[] getShort() {
 		return dataShort;
+	}
+	
+	public Short[] getShortObj() {
+		return dataShortObj;
 	}
 	
 	public int[] getInt() {
 		return dataInt;
 	}
 	
+	public Integer[] getIntObj() {
+		return dataIntObj;
+	}
+	
 	public long[] getLong() {
 		return dataLong;
 	}
 	
+	public Long[] getLongObj() {
+		return dataLongObj;
+	}
+	
 	public float[] getFloat() {
 		return dataFloat;
+	}
+	
+	public Float[] getFloatObj() {
+		return dataFloatObj;
 	}
 	
 	public double[] getDouble() {
@@ -84,6 +119,10 @@ public class Col<T> {
 	
 	public boolean[] getBoolean() {
 		return dataBoolean;
+	}
+	
+	public Boolean[] getBooleanObj() {
+		return dataBooleanObj;
 	}
 	
 	public LocalTime[] getTime() {
@@ -116,29 +155,49 @@ public class Col<T> {
 				dataObj = dataAgg.toArray(new Object[dataAgg.size()]);
 				break;
 			case Types.TINYINT:
-				dataByte = new byte[dataAgg.size()];
-				for (int i = 0; i < dataByte.length; i++) {
-					dataByte[i] = (byte) dataAgg.get(i);
+				if (nullable) {
+					dataByteObj = dataAgg.toArray(new Byte[dataAgg.size()]);
+				} else {
+					dataByte = new byte[dataAgg.size()];
+					for (int i = 0; i < dataByte.length; i++) {
+						dataByte[i] = (byte) dataAgg.get(i);
+					}
 				}
 				break;
 			case Types.SMALLINT:
-				dataShort = new short[dataAgg.size()];
-				for (int i = 0; i < dataShort.length; i++) {
-					dataShort[i] = (short) dataAgg.get(i);
+				if (nullable) {
+					dataShortObj = dataAgg.toArray(new Short[dataAgg.size()]);
+				} else {
+					dataShort = new short[dataAgg.size()];
+					for (int i = 0; i < dataShort.length; i++) {
+						dataShort[i] = (short) dataAgg.get(i);
+					}
 				}
 				break;
 			case Types.INTEGER:
-				dataInt = dataAgg.stream().mapToInt(i -> (int) i).toArray();
+				if (nullable) {
+					dataIntObj = dataAgg.toArray(new Integer[dataAgg.size()]);
+				} else {
+					dataInt = dataAgg.stream().mapToInt(i -> (int) i).toArray();
+				}
 				break;
 			case Types.DATE:
 			case Types.TIMESTAMP:
 			case Types.BIGINT:
-				dataLong = dataAgg.stream().mapToLong(i -> (long) i).toArray();
+				if (nullable) {
+					dataLongObj = dataAgg.toArray(new Long[dataAgg.size()]);
+				} else {
+					dataLong = dataAgg.stream().mapToLong(i -> (long) i).toArray();
+				}
 				break;
 			case Types.REAL:
-				dataFloat = new float[dataAgg.size()];
-				for (int i = 0; i < dataFloat.length; i++) {
-					dataFloat[i] = (float) dataAgg.get(i);
+				if (nullable) {
+					dataFloatObj = dataAgg.toArray(new Float[dataAgg.size()]);
+				} else {
+					dataFloat = new float[dataAgg.size()];
+					for (int i = 0; i < dataFloat.length; i++) {
+						dataFloat[i] = (float) dataAgg.get(i);
+					}
 				}
 				break;
 			case Types.FLOAT:
@@ -146,9 +205,13 @@ public class Col<T> {
 				dataDouble = dataAgg.stream().mapToDouble(i -> (double) i).toArray();
 				break;
 			case Types.BOOLEAN:
-				dataBoolean = new boolean[dataAgg.size()];
-				for (int i = 0; i < dataBoolean.length; i++) {
-					dataBoolean[i] = (boolean) dataAgg.get(i);
+				if (nullable) {
+					dataBooleanObj = dataAgg.toArray(new Boolean[dataAgg.size()]);
+				} else {
+					dataBoolean = new boolean[dataAgg.size()];
+					for (int i = 0; i < dataBoolean.length; i++) {
+						dataBoolean[i] = (boolean) dataAgg.get(i);
+					}
 				}
 				break;
 			case Types.TIME:

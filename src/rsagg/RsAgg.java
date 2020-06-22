@@ -16,6 +16,16 @@ import java.time.ZoneOffset;
  * LocalTime may not be supported). Use Col.get...() to access column
  * data. This is faster than row-by-row access, even when the data is
  * not converted to ndarrays by Jpype (e.g., Strings).
+ * 
+ * Notes:
+ * - returns primitive Java types where possible
+ * - unless a column contains NULL:
+ *   - double: NULL is replaced with Numpy's NaN for doubles
+ *   - all other primitives: object wrapper arrays rather than primitive
+ *     arrays are returned (e.g., getIntObj() -> Integer[]). This is sig.
+ *     slower than even row-wise iteration, which automatically switches
+ *     to double. Either replace NULL values with non-NULL numeric values
+ *     or cast to double.
  */
 public class RsAgg {
 	
@@ -157,41 +167,95 @@ public class RsAgg {
 					cols[i - 1].add(rs.getObject(i));
 					break;
 				case Types.TINYINT:
-					cols[i - 1].add(rs.getByte(i));
+					byte val_byte = rs.getByte(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_byte);
+					}
 					break;
 				case Types.SMALLINT:
-					cols[i - 1].add(rs.getShort(i));
+					short val_short = rs.getShort(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_short);
+					}
 					break;
 				case Types.INTEGER:
-					cols[i - 1].add(rs.getInt(i));
+					int val_int = rs.getInt(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_int);
+					}
 					break;
 				case Types.BIGINT:
-					cols[i - 1].add(rs.getLong(i));
+					long val_long = rs.getLong(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_long);
+					}
 					break;
 				case Types.REAL:
-					cols[i - 1].add(rs.getFloat(i));
+					float val_float = rs.getFloat(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_float);
+					}
 					break;
 				case Types.FLOAT:
 				case Types.DOUBLE:
-					cols[i - 1].add(rs.getDouble(i));
+					double val_double = rs.getDouble(i);
+					if (rs.wasNull()) {
+						// save as Numpy's NaN value for doubles
+						cols[i - 1].add(Double.longBitsToDouble(0x7ff8000000000000L));
+					} else {
+						cols[i - 1].add(val_double);
+					}
 					break;
 				case Types.BOOLEAN:
-					cols[i - 1].add(rs.getBoolean(i));
+					boolean val_bool = rs.getBoolean(i);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						cols[i - 1].add(val_bool);
+					}
 					break;
 				case Types.TIME:
 					// passed as is: there is no matching type on the Python/Numpy side.
 					cols[i - 1].add(rs.getObject(i, LocalTime.class));
 					break;
 				case Types.DATE:
-					// passed as epoch days since 1970 (long), which is very fast and
-					// can easily be parsed by Numpy.datetime64[D]
-					cols[i - 1].add(rs.getObject(i, LocalDate.class).toEpochDay());
+					LocalDate val_date = rs.getObject(i, LocalDate.class);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						// passed as epoch days since 1970 (long), which is very fast and
+						// can easily be parsed by Numpy.datetime64[D]
+						cols[i - 1].add(val_date.toEpochDay());
+					}
 					break;
 				case Types.TIMESTAMP:
-					// passed as epoch seconds since 1970 (long), which is very fast and
-					// can easily be parsed by Numpy.datetime64[s]
-					// numpty.datetime64 is in UTC
-					cols[i - 1].add(rs.getObject(i, LocalDateTime.class).toEpochSecond(ZoneOffset.UTC));
+					LocalDateTime val_timestamp = rs.getObject(i, LocalDateTime.class);
+					if (rs.wasNull()) {
+						cols[i - 1].nullable = true;
+						cols[i - 1].add(null);
+					} else {
+						// passed as epoch seconds since 1970 (long), which is very fast and
+						// can easily be parsed by Numpy.datetime64[s]
+						// numpty.datetime64 is in UTC
+						cols[i - 1].add(val_timestamp.toEpochSecond(ZoneOffset.UTC));
+					}
 					break;
 			}
 		}
