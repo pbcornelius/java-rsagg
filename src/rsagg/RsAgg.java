@@ -51,8 +51,9 @@ public class RsAgg {
 	@SuppressWarnings("rawtypes")
 	public void agg() throws SQLException {
 		try {
+			initCols();
+			
 			if (rs.next()) {
-				initCols();
 				readRow();
 			}
 			
